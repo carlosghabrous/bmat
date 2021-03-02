@@ -1,0 +1,15 @@
+{% extends "dsrs/basic.html" %}
+
+{% block content %}
+<h1>DSR file selection</h1>
+
+<form action="{% url 'dsrs:upload_dsrs' %}" method="post" enctype="multipart/form-data">
+  <div class="form-group">
+    {% csrf_token %}
+    <table>
+      {{ form.as_table }}
+    </table>
+    <input type="submit" value="Upload file">
+  </div>
+</form>
+{% endblock %}
