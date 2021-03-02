@@ -1,7 +1,9 @@
 from rest_framework import viewsets
 from django.http.response import HttpResponse, HttpResponseBadRequest
+from django.views.generic.edit import FormView
 
 from . import models, serializers
+from .forms import SelectDsrsFileForm
 
 
 class DSRViewSet(viewsets.ModelViewSet):
@@ -12,8 +14,24 @@ class DSPViewSet(viewsets.ModelViewSet):
     queryset = models.DSP.objects.all()
     serializer_class = serializers.DSPSerializer
 
-def import_dsrs(request):
-    return HttpResponse('hello')
+class UploadDsrFilesForm(FormView):
+    form_class     = SelectDsrsFileForm
+    template_name  = 'dsrs/upload_dsrs.html'
+    success_url    = 'dsrs/success.html'
+
+    def post(self, request, *args, **kwargs):
+        form_class  = self.get_form_class()
+        form        = self.get_form(form_class)
+        files       = request.FILES.getlist('file_field')
+
+        if form.is_valid():
+            for f in files:
+                pass 
+
+            return self.form_valid(form)
+
+        else:
+            return self.form_invalid(form)
 
 
 def percentile(request, value):
