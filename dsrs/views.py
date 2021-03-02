@@ -12,6 +12,9 @@ class DSPViewSet(viewsets.ModelViewSet):
     queryset = models.DSP.objects.all()
     serializer_class = serializers.DSPSerializer
 
+def import_dsrs(request):
+    return HttpResponse('hello')
+
 
 def percentile(request, value):
     output, err_msg = '', ''
