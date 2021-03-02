@@ -36,3 +36,18 @@ class DSRSerializer(serializers.ModelSerializer):
             "territory",
             "currency",
         )
+
+class DSPSerializer(serializers.ModelSerializer):
+    dsr_id = DSRSerializer()
+
+    class Meta:
+        model = models.DSP
+        fields = (
+            "dsp_id",
+            "title",
+            "artists",
+            "isrc",
+            "usages",
+            "revenue",
+            "dsr_id",
+        )

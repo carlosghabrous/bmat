@@ -20,6 +20,7 @@ from rest_framework import routers
 
 router = routers.DefaultRouter()
 router.register(r"dsrs", views.DSRViewSet)
+router.register(r"dsps", views.DSPViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
