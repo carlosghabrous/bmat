@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
 from django.shortcuts import render
 
-from . import models, serializers
+from . import models, serializers, utils
 from .forms import SelectDsrsFileForm
 
 import logging
@@ -35,7 +35,23 @@ class UploadDsrFilesForm(FormView):
 
         if form.is_valid():
             for f in files:
-                pass
+                dsr_records = utils.parse_dsr_file(f.name)
+
+                md = dsr_records['meta']
+                curr = models.Currency(name='', symbol='', code=md.currency)
+                # curr.save()
+
+                terr = models.Territory(name='', code_2=md.territory, local_currency=curr)
+                # terr.save()
+
+                dsr_meta = models.DSR(path=md.path, period_start=md.period_start, period_end=md.period_end, status="INGESTED", territory=terr, currency=curr)
+                # dsr_meta.save()
+
+                data = dsr_records['data']
+                for record in data: 
+                    dsp = models.DSP(dsp_id=record.dsp_id, title=record.title, artists=record.artists, isrc=record.isrc, usages=record.usages, revenue=record.revenue, dsr_id=dsr_meta)
+                    # dsp.save()
+
 
             return self.form_valid(form)
 
