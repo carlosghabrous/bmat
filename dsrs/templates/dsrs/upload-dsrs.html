@@ -3,7 +3,7 @@
 {% block content %}
 <h1>DSR file selection</h1>
 
-<form action="{% url 'dsrs:upload_dsrs' %}" method="post" enctype="multipart/form-data">
+<form action="{% url 'dsrs:upload-dsrs' %}" method="post" enctype="multipart/form-data">
   <div class="form-group">
     {% csrf_token %}
     <table>
