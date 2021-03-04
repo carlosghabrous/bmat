@@ -7,8 +7,7 @@ from django.shortcuts import render
 from . import models, serializers, utils
 from .forms import SelectDsrsFileForm
 
-import logging
-logger = logging.getLogger(__name__)
+import pycountry
 
 class DSRViewSet(viewsets.ModelViewSet):
     queryset = models.DSR.objects.all()
@@ -38,10 +37,19 @@ class UploadDsrFilesForm(FormView):
                 dsr_records = utils.parse_dsr_file(f.name)
 
                 md = dsr_records['meta']
-                curr = models.Currency(name='', symbol='', code=md.currency)
+
+                currency = pycountry.currencies.get(alpha_3=md.currency)
+                if not currency: 
+                    pass 
+
+                curr = models.Currency(name=currency.name, symbol=currency.numeric, code=md.currency)
                 # curr.save()
 
-                terr = models.Territory(name='', code_2=md.territory, local_currency=curr)
+                country = pycountry.countries.get(alpha_2=md.territory)
+                if not country: 
+                    pass 
+
+                terr = models.Territory(name=country.name, code_2=md.territory, code_3=country.alpha_3, local_currency=curr)
                 # terr.save()
 
                 dsr_meta = models.DSR(path=md.path, period_start=md.period_start, period_end=md.period_end, status="INGESTED", territory=terr, currency=curr)
