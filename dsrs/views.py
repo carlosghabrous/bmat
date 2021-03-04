@@ -13,6 +13,7 @@ import logging
 import pycountry
 
 logger = logging.getLogger(__name__)
+
 class DSRViewSet(viewsets.ModelViewSet):
     queryset = models.DSR.objects.all()
     serializer_class = serializers.DSRSerializer
@@ -22,6 +23,13 @@ class DSPViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DSPSerializer
 
 class UploadDsrFilesForm(FormView):
+    '''This class is used to dump a form to select compressed/uncompressed DSR files to upload their data into the DB
+
+    The class extends FormView and overwrites the get and post methods. The get method will be executed on the form's first load
+    by the user. The post will be executed when the user submits the form. The form allows multiple .gz and or .tsv files to be 
+    uploaded at once. The function utils.parse_dsr_file parses each file and returns a dictionary containing its records.
+    I have used the dependency pycountry to get the missing data on the Territory and Currency models from the DSR file names'''
+
     form_class     = SelectDsrsFileForm
     template_name  = 'dsrs/upload-dsrs.html'
     success_url    = 'success/'
@@ -43,7 +51,10 @@ class UploadDsrFilesForm(FormView):
                 md = dsr_records['meta']
 
                 currency = pycountry.currencies.get(alpha_3=md.currency)
+
                 if not currency: 
+                    '''This is just to show that some action could be taken in case the file names are wrong
+                    and the currency is not identified'''
                     pass 
 
                 curr = models.Currency(name=currency.name, symbol=currency.numeric, code=md.currency)
@@ -51,10 +62,16 @@ class UploadDsrFilesForm(FormView):
                     curr.save()
 
                 except IntegrityError as e:
+                    '''The Currency model implements a unique constraint to prevent the same currency to be inserted more than once. 
+                    The IntegrityError constraint, that could be triggered when trying to insert duplicated records in this table,
+                    is catched here and logged (among others). I decided not to re-raise the exception in this case not to prevent
+                    the file records to be inserted'''
                     logger.error(str(e))
 
                 country = pycountry.countries.get(alpha_2=md.territory)
                 if not country: 
+                    '''This is just to show that some action could be taken in case the file names are wrong
+                    and the country is not identified'''
                     pass 
 
                 terr = models.Territory(name=country.name, code_2=md.territory, code_3=country.alpha_3, local_currency=curr)
@@ -62,6 +79,10 @@ class UploadDsrFilesForm(FormView):
                     terr.save()
 
                 except IntegrityError as e:
+                    '''The Territory model implements a unique constraint to prevent the same territory to be inserted more than once. 
+                    The IntegrityError constraint, that could be triggered when trying to insert duplicated records in this table,
+                    is catched here and logged (among others). I decided not to re-raise the exception in this case not to prevent
+                    the file records to be inserted'''
                     logger.error(str(e))
 
                 dsr_meta = models.DSR(path=md.path, period_start=md.period_start, period_end=md.period_end, status="INGESTED", territory=terr, currency=curr)
@@ -70,12 +91,15 @@ class UploadDsrFilesForm(FormView):
                     dsr_meta.save()
 
                 except IntegrityError as e:
+                    '''The DSR model implements a unique constraint to prevent the same DSR file meta data to be inserted more than once. 
+                    The IntegrityError constraint, that could be triggered when trying to insert duplicated records in this table,
+                    is catched here and logged (among others). I decided not to re-raise the exception in this case not to prevent
+                    the file records to be inserted'''
                     logger.error(str(e))
 
                 data = dsr_records['data']
                 for record in data: 
                     dsp = models.DSP(dsp_id=record.dsp_id, title=record.title, artists=record.artists, isrc=record.isrc, usages=record.usages, revenue=record.revenue, dsr_id=dsr_meta)
-                    logger.error(f'about to save {record}')
                     dsp.save()
 
 
