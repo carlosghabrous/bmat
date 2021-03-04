@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from django.http.response import HttpResponse, HttpResponseBadRequest
+from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
+from django.shortcuts import render
 
 from . import models, serializers
 from .forms import SelectDsrsFileForm
@@ -20,6 +22,11 @@ class UploadDsrFilesForm(FormView):
     form_class     = SelectDsrsFileForm
     template_name  = 'dsrs/upload-dsrs.html'
     success_url    = 'success/'
+
+    def get(self, request):
+       form_class = self.get_form_class()
+       form = self.get_form(form_class)
+       return render(request, 'dsrs/upload-dsrs.html', {'form':form})
 
     def post(self, request, *args, **kwargs):
         form_class  = self.get_form_class()
@@ -46,4 +53,5 @@ def percentile(request, value):
     return HttpResponse(f'user requested percentile {value}')
 
 def success(request):
-    return HttpResponse('success!')
+    return HttpResponse('DSR file(s) successfully uploaded')
+
