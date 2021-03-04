@@ -5,6 +5,8 @@ from django.views.generic.edit import FormView
 from . import models, serializers
 from .forms import SelectDsrsFileForm
 
+import logging
+logger = logging.getLogger(__name__)
 
 class DSRViewSet(viewsets.ModelViewSet):
     queryset = models.DSR.objects.all()
@@ -26,13 +28,12 @@ class UploadDsrFilesForm(FormView):
 
         if form.is_valid():
             for f in files:
-                pass 
+                pass
 
             return self.form_valid(form)
 
         else:
             return self.form_invalid(form)
-
 
 def percentile(request, value):
     output, err_msg = '', ''
@@ -43,3 +44,6 @@ def percentile(request, value):
 
     #TODO: extract from DB, calculate the percentile, and convert to EUR
     return HttpResponse(f'user requested percentile {value}')
+
+def success(request):
+    return HttpResponse('success!')
