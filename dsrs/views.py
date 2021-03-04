@@ -1,14 +1,18 @@
-from rest_framework import viewsets
-from django.http.response import HttpResponse, HttpResponseBadRequest
-from django.views.generic import TemplateView
-from django.views.generic.edit import FormView
-from django.shortcuts import render
+from rest_framework             import viewsets
 
-from . import models, serializers, utils
-from .forms import SelectDsrsFileForm
+from django.db                  import IntegrityError
+from django.http.response       import HttpResponse, HttpResponseBadRequest
+from django.views.generic       import TemplateView
+from django.views.generic.edit  import FormView
+from django.shortcuts           import render
 
+from .                          import models, serializers, utils
+from .forms                     import SelectDsrsFileForm
+
+import logging
 import pycountry
 
+logger = logging.getLogger(__name__)
 class DSRViewSet(viewsets.ModelViewSet):
     queryset = models.DSR.objects.all()
     serializer_class = serializers.DSRSerializer
@@ -43,22 +47,36 @@ class UploadDsrFilesForm(FormView):
                     pass 
 
                 curr = models.Currency(name=currency.name, symbol=currency.numeric, code=md.currency)
-                # curr.save()
+                try:
+                    curr.save()
+
+                except IntegrityError as e:
+                    logger.error(str(e))
 
                 country = pycountry.countries.get(alpha_2=md.territory)
                 if not country: 
                     pass 
 
                 terr = models.Territory(name=country.name, code_2=md.territory, code_3=country.alpha_3, local_currency=curr)
-                # terr.save()
+                try:
+                    terr.save()
+
+                except IntegrityError as e:
+                    logger.error(str(e))
 
                 dsr_meta = models.DSR(path=md.path, period_start=md.period_start, period_end=md.period_end, status="INGESTED", territory=terr, currency=curr)
-                # dsr_meta.save()
+                
+                try:
+                    dsr_meta.save()
+
+                except IntegrityError as e:
+                    logger.error(str(e))
 
                 data = dsr_records['data']
                 for record in data: 
                     dsp = models.DSP(dsp_id=record.dsp_id, title=record.title, artists=record.artists, isrc=record.isrc, usages=record.usages, revenue=record.revenue, dsr_id=dsr_meta)
-                    # dsp.save()
+                    logger.error(f'about to save {record}')
+                    dsp.save()
 
 
             return self.form_valid(form)
