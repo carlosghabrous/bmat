@@ -9,7 +9,9 @@ from django.shortcuts           import render
 from .                          import models, serializers, utils
 from .forms                     import SelectDsrsFileForm
 
+import datetime
 import logging
+
 import pycountry
 
 logger = logging.getLogger(__name__)
@@ -103,21 +105,87 @@ class UploadDsrFilesForm(FormView):
                     dsp.save()
 
 
+            # Redirects to success URL
             return self.form_valid(form)
 
         else:
             return self.form_invalid(form)
 
+def _validate_territory(territory):
+    msg = ''
+
+    if not territory:
+        return msg
+
+    country = pycountry.countries.get(alpha_2=territory)
+    if not country:
+        msg = f'Country {territory} not found. Use its two-character length code'
+
+    return msg
+
+def _validate_currency(currency):
+    msg = ''
+
+    if not currency: 
+        return msg
+
+    country_currency = pycountry.currencies.get(alpha_3=currency)
+    if not country_currency:
+        msg = f'Currency {currency} not found. Use its three-character length code'
+
+    return msg
+
+def _validate_date(a_date):
+    msg = ''
+
+    if not a_date:
+        return msg
+
+    try:
+        datetime.datetime.strptime(a_date, '%Y-%m-%d')
+
+    except ValueError:
+        msg = 'Incorrect date format. Change it to YYYY-MM-DD and repeat the request'
+
+    return msg
+
 def percentile(request, value):
-    output, err_msg = '', ''
+    err_msg = ''
 
     if value < 1 or value > 100:
         err_msg = f'Percentile value {value} is not allowed! Values should be within (1-100) range'
         return HttpResponseBadRequest(err_msg)
 
-    #TODO: extract from DB, calculate the percentile, and convert to EUR
-    return HttpResponse(f'user requested percentile {value}')
+    # Extract parameters from URL
+    territory     = request.GET.get('territory', '')
+    currency      = request.GET.get('currency', '')
+    period_start  = request.GET.get('period_start', '')
+    period_end    = request.GET.get('period_end', '')
+
+    # Validate currency
+    err_msg = _validate_currency(currency)
+    if err_msg: 
+        return HttpResponseBadRequest(err_msg)
+
+    # Validate territory
+    err_msg = _validate_territory(territory)
+    if err_msg:
+        return HttpResponseBadRequest(err_msg)
+
+    # Validate dates are in correct formats
+    err_msg = _validate_date(period_start)
+    err_msg += _validate_date(period_end)
+    
+    if err_msg:
+        return HttpResponseBadRequest(err_msg)
+
+    # make query
+    # if currency is given: don't worry about EUR or not EUR. Just convert it at the end if necessary
+    # if country is given: don't worry about EUR or not EUR. Just convert it at the end if necessary
+    # 
+    return HttpResponse(f'user\'s query: percentile {value}; territory {territory}, currency {currency}, start {period_start}, end {period_end}')
 
 def success(request):
+    '''Simple redirect after the form's post'''
     return HttpResponse('DSR file(s) successfully uploaded')
 
