@@ -188,7 +188,7 @@ def percentile(request, value):
         if err_msg:
             return HttpResponseBadRequest(err_msg)
 
-        filter_dict.update({'dsr_id__period_start':period_start})
+        filter_dict.update({'dsr_id__period_start__gte':period_start})
 
     if period_end:
         err_msg = _validate_date(period_end)
@@ -196,13 +196,23 @@ def percentile(request, value):
         if err_msg:
             return HttpResponseBadRequest(err_msg)
 
-        filter_dict.update({'dsr_id__period_end':period_end})    
+        filter_dict.update({'dsr_id__period_end__lte':period_end})    
 
-    dsps_query_set = models.DSP.objects.filter(**filter_dict)
+    dsps_query_set     = models.DSP.objects.filter(**filter_dict)
+    unique_currencies  = dsps_query_set.values('dsr_id__currency__code').distinct()
+    
+    # Get the conversion factors we need
+    conversion_factors = dict()
+    for unique_c in unique_currencies:
+        from_currency, to_currency = unique_c['dsr_id__currency__code'], 'EUR'
+        conversion_factors.update({from_currency : utils.get_conversion_factor(from_currency, to_currency)})
 
-    # if currency is given: don't worry about EUR or not EUR. Just convert it at the end if necessary
-    # if country is given: don't worry about EUR or not EUR. Just convert it at the end if necessary
-    # 
+    if len(conversion_factors) > 1:
+        pass 
+
+    else:
+        pass
+
     return HttpResponse(f'{str(dsps_query_set)}')
 
 def success(request):
