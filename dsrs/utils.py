@@ -1,4 +1,6 @@
+import ast
 import gzip
+import requests
 from collections  import namedtuple
 from datetime     import datetime
 from pathlib      import Path
@@ -88,3 +90,9 @@ def parse_dsr_file(file_name):
 
     else:
         return record_list
+
+
+def get_conversion_factor(from_currency, to_currency):
+    conversion_query_string = from_currency + '_' + to_currency
+    conversion = requests.get(f'https://free.currconv.com/api/v7/convert?q={conversion_query_string}&compact=ultra&apiKey=6cd9d6b95b3d077a16dc').text
+    return ast.literal_eval(conversion).get(conversion_query_string, 0)
