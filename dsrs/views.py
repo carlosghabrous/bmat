@@ -162,28 +162,48 @@ def percentile(request, value):
     period_start  = request.GET.get('period_start', '')
     period_end    = request.GET.get('period_end', '')
 
-    # Validate currency
-    err_msg = _validate_currency(currency)
-    if err_msg: 
-        return HttpResponseBadRequest(err_msg)
+    filter_dict = dict()
+    
+    # Territory
+    if territory:
+        err_msg = _validate_territory(territory)
 
-    # Validate territory
-    err_msg = _validate_territory(territory)
-    if err_msg:
-        return HttpResponseBadRequest(err_msg)
+        if err_msg: 
+            return HttpResponseBadRequest(err_msg)
+
+        filter_dict.update({'dsr_id__territory__code_2':territory})
+
+    # Validate currency
+    if currency:
+        err_msg = _validate_currency(currency)
+        if err_msg:
+            return HttpResponseBadRequest(err_msg)
+
+        filter_dict.update({'dsr_id__currency__code':currency})
 
     # Validate dates are in correct formats
-    err_msg = _validate_date(period_start)
-    err_msg += _validate_date(period_end)
-    
-    if err_msg:
-        return HttpResponseBadRequest(err_msg)
+    if period_start:
+        err_msg = _validate_date(period_start)
 
-    # make query
+        if err_msg:
+            return HttpResponseBadRequest(err_msg)
+
+        filter_dict.update({'dsr_id__period_start':period_start})
+
+    if period_end:
+        err_msg = _validate_date(period_end)
+
+        if err_msg:
+            return HttpResponseBadRequest(err_msg)
+
+        filter_dict.update({'dsr_id__period_end':period_end})    
+
+    dsps_query_set = models.DSP.objects.filter(**filter_dict)
+
     # if currency is given: don't worry about EUR or not EUR. Just convert it at the end if necessary
     # if country is given: don't worry about EUR or not EUR. Just convert it at the end if necessary
     # 
-    return HttpResponse(f'user\'s query: percentile {value}; territory {territory}, currency {currency}, start {period_start}, end {period_end}')
+    return HttpResponse(f'{str(dsps_query_set)}')
 
 def success(request):
     '''Simple redirect after the form's post'''
