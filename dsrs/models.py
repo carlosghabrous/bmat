@@ -89,5 +89,5 @@ class DSP(models.Model):
     artists  = models.CharField(max_length=256)
     isrc     = models.CharField(max_length=12)
     usages   = models.PositiveIntegerField()
-    revenue  = models.DecimalField(max_digits=30, decimal_places=15)
+    revenue  = models.DecimalField(max_digits=40, decimal_places=19)
     dsr_id   = models.ForeignKey(DSR, related_name="dsps", on_delete=models.DO_NOTHING)
