@@ -211,7 +211,8 @@ def percentile(request, value):
         pass 
 
     else:
-        pass
+        dsps_query_set.order_by('-revenue')
+        
 
     return HttpResponse(f'{str(dsps_query_set)}')
 
