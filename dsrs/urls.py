@@ -9,7 +9,7 @@ It also contains a handler to manage a request to 'resources/upload-dsrs', which
 user a form to select the data that the user would want to store into the DB.'''
 
 urlpatterns = [
-    path('upload-dsrs/',            views.UploadDsrFilesForm.as_view(), name='upload-dsrs'),
-    path('upload-dsrs/success/',    views.success,                      name='success'),
-    path('percentile/<int:value>/', views.percentile,                   name='percentile'),
+    path('upload-dsrs/',                        views.UploadDsrFilesForm.as_view(), name='upload-dsrs'),
+    path('upload-dsrs/success/',                views.success,                      name='success'),
+    path('percentile/<int:percentile_value>/',  views.percentile,                   name='percentile'),
 ]
