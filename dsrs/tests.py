@@ -7,7 +7,7 @@ from random import randint
 class DsrTests(TestCase):
     
     def setUp(self):
-        # Add data into the DB
+        # Add data into the DB (ideally, much more, this is just a sample)
         currency   = Currency(name='Euro', symbol='8888', code='EUR')
         territory  = Territory(name='Spain', code_2='ES', code_3='ESP', local_currency=currency)
         currency.save()
@@ -26,7 +26,7 @@ class DsrTests(TestCase):
 
     def test_get_all_dsr_records_length_is_correct(self):
         response = self.client.get('/dsrs/', HTTP_ACCEPT='application/json')    
-        dsr_records_number_db = len(DSR.objects.filter(pk=1))
+        dsr_records_number_db = DSR.objects.filter(pk=1).count()
         dsr_records_number_get_response = len(response.json())
 
         self.assertEqual(dsr_records_number_db, dsr_records_number_get_response)
@@ -53,6 +53,19 @@ class DsrTests(TestCase):
 
     def test_get_percentile_out_of_range_returns_404_response(self):
         percentile = 101
+        response = self.client.get(f'/resources/percentile/{percentile}/', HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        percentile = 0
+        response = self.client.get(f'/resources/percentile/{percentile}/', HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_get_percentile_limit_values_returns_OK_response(self):
+        percentile = 1
+        response = self.client.get(f'/resources/percentile/{percentile}/', HTTP_ACCEPT='application/json')
+        self.assertEqual(response.status_code, 400)
+
+        percentile = 100
         response = self.client.get(f'/resources/percentile/{percentile}/', HTTP_ACCEPT='application/json')
         self.assertEqual(response.status_code, 400)
 
