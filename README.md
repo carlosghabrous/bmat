@@ -35,10 +35,10 @@ Our current (and incomplete) database contains the following tables:
 
 Deliverables:
 
-* A way to import the contents of DSRs to the DB.
+* A way to import the contents of DSRs to the DB. -> DONE
 * Complete the API according to the OpenAPI specification.
-* A form in the admin page to delete DSRs and it's contents.
-* Tests for each api endpoint, using any preferred testing framework.
+* A form in the admin page to delete DSRs and it's contents. -> DONE
+* Tests for each api endpoint, using any preferred testing framework. -> DONE
 * Dockerfile
 
 Requirements:
