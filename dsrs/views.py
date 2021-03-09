@@ -1,6 +1,8 @@
 from rest_framework             import viewsets
 
+from django.core                import serializers as core_serializers
 from django.db                  import IntegrityError
+from django.db.models           import Case, DecimalField, F, Sum, When
 from django.http.response       import HttpResponse, HttpResponseBadRequest
 from django.views.generic       import TemplateView
 from django.views.generic.edit  import FormView
@@ -149,11 +151,11 @@ def _validate_date(a_date):
 
     return msg
 
-def percentile(request, value):
+def percentile(request, percentile_value):
     err_msg = ''
 
-    if value < 1 or value > 100:
-        err_msg = f'Percentile value {value} is not allowed! Values should be within (1-100) range'
+    if percentile_value < 1 or percentile_value > 100:
+        err_msg = f'Percentile value {percentile_value} is not allowed! Values should be within (1-100) range'
         return HttpResponseBadRequest(err_msg)
 
     # Extract parameters from URL
@@ -198,23 +200,40 @@ def percentile(request, value):
 
         filter_dict.update({'dsr_id__period_end__lte':period_end})    
 
-    dsps_query_set     = models.DSP.objects.filter(**filter_dict)
-    unique_currencies  = dsps_query_set.values('dsr_id__currency__code').distinct()
+    # Make a copy of the filtered queryset
+    dsps_query_set     = models.DSP.objects.filter(**filter_dict).all()
+    unique_currencies  = dsps_query_set.values('dsr_id__currency__code').distinct().all()
     
     # Get the conversion factors we need
     conversion_factors = dict()
+    conversion_factors.update({'EUR':1})
+
     for unique_c in unique_currencies:
         from_currency, to_currency = unique_c['dsr_id__currency__code'], 'EUR'
         conversion_factors.update({from_currency : utils.get_conversion_factor(from_currency, to_currency)})
 
-    if len(conversion_factors) > 1:
-        pass 
+    # Add exchange rate to queryset
+    whens = [When(dsr_id__currency__code=k, then=v) for k, v in conversion_factors.items()]
+    qs_with_exchange_rate = dsps_query_set.annotate(exchange_rate=Case(*whens, default=0, output_field=DecimalField()))
 
-    else:
-        dsps_query_set.order_by('-revenue')
-        
+    # Add revenue in EUR
+    qs_with_revenue_eur = qs_with_exchange_rate.annotate(revenue_eur=F('revenue') * F('exchange_rate')).order_by('-revenue_eur')
 
-    return HttpResponse(f'{str(dsps_query_set)}')
+    # Calculate total revenue EUR
+    target_percentile = (percentile_value/100) * float(qs_with_revenue_eur.aggregate(Sum('revenue_eur'))['revenue_eur__sum'])
+    amount_so_far = 0
+
+    count = 0
+    for record in qs_with_revenue_eur:
+        if amount_so_far <= target_percentile:
+            count += 1
+            amount_so_far += float(record.revenue_eur)
+
+        else:
+            break
+
+    data = core_serializers.serialize('json', qs_with_revenue_eur[0:count])
+    return HttpResponse(data, content_type='application/json')
 
 def success(request):
     '''Simple redirect after the form's post'''
