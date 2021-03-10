@@ -52,6 +52,11 @@ Extra questions:
   deploy this solution to production, would you do any change in the database 
   or process, in order to import the usages? Which ones?
 
+* ANSWER FROM CARLOS. I would several things:
+  * DB side. First, use just one transaction. It is true that transactions are mainly used to guarantee data integrity (either something happens or not), but I guess time must be saved if one uses one transaction only rather a number of transactions of the order of the records to be inserted. 
+  * DB side. The main performance improvement though, will happen if 'bulk_create' is used. In such a way, all records could potentially be inserted in just one query. 
+  * DB side. It could also make sense to have a database connection pool. This would keep connections open for use, instead of having to open them every time an operation needs to be performed on the DB, which could be expensive. 
+  * App side. Can the DB handle multiple threads that perform insert operations? Different threads could take care of reading different files/records, which I understand are independent from each other, and therefore could be consumed in parallel. 
 Note:
 
 In order to manage python dependencies, it will be necessary to use any tool 
