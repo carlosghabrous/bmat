@@ -8,6 +8,7 @@ django = "*"
 djangorestframework = "*"
 pycountry = "*"
 gunicorn = "*"
+requests = "*"
 
 [dev-packages]
 
