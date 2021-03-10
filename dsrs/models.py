@@ -66,7 +66,7 @@ class DSR(models.Model):
     )
 
 class DSP(models.Model):
-    '''The DSP table models the information contained in the csv.gz files.
+    '''FROM CARLOS: The DSP table models the information contained in the tsv.gz files.
 
     The maximum lengths for the different fields have been chosen arbitrarily taking
     into account the samples provided. The revenue field has been setup as a 'decimal'

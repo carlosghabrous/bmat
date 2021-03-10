@@ -38,6 +38,7 @@ class DSRSerializer(serializers.ModelSerializer):
         )
 
 class DSPSerializer(serializers.ModelSerializer):
+    '''FROM CARLOS: Added basic serializer for the DSP model'''
     dsr_id = DSRSerializer()
 
     class Meta:

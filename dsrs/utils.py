@@ -9,7 +9,7 @@ DATA_DIR = Path(__file__).parent.parent.absolute() / 'data'
 
 
 class DsrRecord:
-    '''This class represents a DSR's file row.
+    '''FROM CARLOS: This class represents a DSR's file row.
     
     The only particularity is that usages and revenue have been set as keyword arguments. This is because DSR files can
     contain an empty value for these fields. In order to feed something correct to the database, these fields are initialized
@@ -27,28 +27,28 @@ class DsrRecord:
     def __repr__(self):
         return f'<DsrRecord(dsp_id={self.dsp_id}, title={self.title}, artists={self.artists}, isrc={self.isrc}, usages={self.usages}, revenue={self.revenue})>'
 
-'''A namedtuple collection to store the DSR file metadata'''
+'''FROM CARLOS: A namedtuple collection to store the DSR file metadata'''
 dsr_meta_fields    = ('path', 'territory', 'currency', 'period_start', 'period_end')
 DsrMetaData        = namedtuple('DsrMetaData', dsr_meta_fields)
 
 
 def _reformat_date(date):
-    '''Reformats dates into an appropriate format'''
+    '''FROM CARLOS: Reformats dates into an appropriate format'''
     dobj = datetime.strptime(date, '%Y%m%d')
     return datetime.strftime(dobj, '%Y-%m-%d')
 
 def _handle_gzip_file(file_name):
-    '''Handles compressed files'''
+    '''FROM CARLOS: Handles compressed files'''
     with gzip.open(file_name, 'r') as fh:
         return _handle_tsv_file_with_handler(fh, file_name, compressed=True)
 
 def _handle_tsv_file(file_name):
-    '''Handles uncompressed files'''
+    '''FROM CARLOS: Handles uncompressed files'''
     with open(file_name) as fh:
         return _handle_tsv_file_with_handler(fh, file_name)
 
 def _handle_tsv_file_with_handler(fh, file_name, compressed=False):
-    '''Shared code between compressed/uncompressed files'''
+    '''FROM CARLOS: Shared code between compressed/uncompressed files'''
     dsr_records = dict()
 
     _, _, territory, currency, rest = file_name.name.split('_')
@@ -73,6 +73,7 @@ def _handle_tsv_file_with_handler(fh, file_name, compressed=False):
     return dsr_records
 
 
+'''FROM CARLOS: "kind-of-factory" implemented with a dictionary'''
 _file_handlers = {
     '.gz' : _handle_gzip_file,
     '.tsv' : _handle_tsv_file
@@ -80,6 +81,7 @@ _file_handlers = {
 
 
 def parse_dsr_file(file_name):
+    '''FROM CARLOS: Returns a record list from the parsed .tsv files'''
     file_path = Path(file_name)
 
     try:
@@ -93,6 +95,7 @@ def parse_dsr_file(file_name):
 
 
 def get_conversion_factor(from_currency, to_currency):
+    '''FROM CARLOS: Gets the conversion rates for certain currencies'''
     conversion_query_string = from_currency + '_' + to_currency
     conversion = requests.get(f'https://free.currconv.com/api/v7/convert?q={conversion_query_string}&compact=ultra&apiKey=6cd9d6b95b3d077a16dc').text
     return ast.literal_eval(conversion).get(conversion_query_string, 0)

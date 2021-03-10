@@ -27,12 +27,15 @@ class DSPViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.DSPSerializer
 
 class UploadDsrFilesForm(FormView):
-    '''This class is used to dump a form to select compressed/uncompressed DSR files to upload their data into the DB
+    '''FROM CARLOS: This class is used to dump a form to select compressed/uncompressed DSR files to upload their data into the DB
 
     The class extends FormView and overwrites the get and post methods. The get method will be executed on the form's first load
     by the user. The post will be executed when the user submits the form. The form allows multiple .gz and or .tsv files to be 
     uploaded at once. The function utils.parse_dsr_file parses each file and returns a dictionary containing its records.
-    I have used the dependency pycountry to get the missing data on the Territory and Currency models from the DSR file names'''
+    I have used the dependency pycountry to get the missing data on the Territory and Currency models from the DSR file names.
+    
+    Some static files (html and css) have also been added in their simplest forms, just to show that the form could be stylized
+    as much as it is desired to'''
 
     form_class     = SelectDsrsFileForm
     template_name  = 'dsrs/upload-dsrs.html'
@@ -57,7 +60,7 @@ class UploadDsrFilesForm(FormView):
                 currency = pycountry.currencies.get(alpha_3=md.currency)
 
                 if not currency: 
-                    '''This is just to show that some action could be taken in case the file names are wrong
+                    '''FROM CARLOS: This is just to show that some action could be taken in case the file names are wrong
                     and the currency is not identified'''
                     pass 
 
@@ -66,7 +69,7 @@ class UploadDsrFilesForm(FormView):
                     curr.save()
 
                 except IntegrityError as e:
-                    '''The Currency model implements a unique constraint to prevent the same currency to be inserted more than once. 
+                    '''FROM CARLOS: The Currency model implements a unique constraint to prevent the same currency to be inserted more than once. 
                     The IntegrityError constraint, that could be triggered when trying to insert duplicated records in this table,
                     is catched here and logged (among others). I decided not to re-raise the exception in this case not to prevent
                     the file records to be inserted'''
@@ -74,7 +77,7 @@ class UploadDsrFilesForm(FormView):
 
                 country = pycountry.countries.get(alpha_2=md.territory)
                 if not country: 
-                    '''This is just to show that some action could be taken in case the file names are wrong
+                    '''FROM CARLOS: This is just to show that some action could be taken in case the file names are wrong
                     and the country is not identified'''
                     pass 
 
@@ -83,7 +86,7 @@ class UploadDsrFilesForm(FormView):
                     terr.save()
 
                 except IntegrityError as e:
-                    '''The Territory model implements a unique constraint to prevent the same territory to be inserted more than once. 
+                    '''FROM CARLOS: The Territory model implements a unique constraint to prevent the same territory to be inserted more than once. 
                     The IntegrityError constraint, that could be triggered when trying to insert duplicated records in this table,
                     is catched here and logged (among others). I decided not to re-raise the exception in this case not to prevent
                     the file records to be inserted'''
@@ -95,7 +98,7 @@ class UploadDsrFilesForm(FormView):
                     dsr_meta.save()
 
                 except IntegrityError as e:
-                    '''The DSR model implements a unique constraint to prevent the same DSR file meta data to be inserted more than once. 
+                    '''FROM CARLOS: The DSR model implements a unique constraint to prevent the same DSR file meta data to be inserted more than once. 
                     The IntegrityError constraint, that could be triggered when trying to insert duplicated records in this table,
                     is catched here and logged (among others). I decided not to re-raise the exception in this case not to prevent
                     the file records to be inserted'''
@@ -152,6 +155,16 @@ def _validate_date(a_date):
     return msg
 
 def percentile(request, percentile_value):
+    '''FROM CARLOS: Implements the /dsrs/resources/<percentile> open API endpoint
+
+    First, the request is validated, and a bad request returned if parameters are not correct. 
+    Correct parameters are added into a dictionary that is later on used to filter the QuerySet records from the DSP table. 
+    All different currencies from these records are retrieved, in order to get the respective conversion factors into EUR. 
+    The exchange rates and the revenue in EUR are calculated and added to the QuerySet, in order not to load this 
+    to memory. 
+
+    Finally, the appropriate records are selected and returned in JSON format. 
+    '''
     err_msg = ''
 
     if percentile_value < 1 or percentile_value > 100:
@@ -236,6 +249,6 @@ def percentile(request, percentile_value):
     return HttpResponse(data, content_type='application/json')
 
 def success(request):
-    '''Simple redirect after the form's post'''
+    '''FROM CARLOS: Simple redirect after the form's post'''
     return HttpResponse('DSR file(s) successfully uploaded')
 

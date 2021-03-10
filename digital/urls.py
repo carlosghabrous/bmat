@@ -22,8 +22,8 @@ router = routers.DefaultRouter()
 router.register(r"dsrs", views.DSRViewSet)
 router.register(r"dsps", views.DSPViewSet)
 
-## Added the 'resources' path, which forwards the request to the 
-## module dsrs.urls
+'''FROM CARLOS: 
+Added the 'resources' path, which forwards the request to the module dsrs.urls'''
 
 urlpatterns = [
     path("admin/", admin.site.urls),
