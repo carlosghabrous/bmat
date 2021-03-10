@@ -5,18 +5,20 @@ ADD Pipfile /app/Pipfile
 ADD Pipfile.lock /app/Pipfile.lock
 ENV PIPENV_PIPFILE=/app/Pipfile
 
-RUN python -m venv /app/env \
-    && /app/env/bin/pip install --upgrade pip \
-    && /app/env/bin/pip install pipenv \
-    && /app/env/bin/pipenv sync
+
+ENV VIRTUAL_ENV=/app/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN python -m venv $VIRTUAL_ENV \
+    && pip install --upgrade pip \
+    && pip install pipenv \
+    && pipenv sync
 
 ADD digital /app/digital
 ADD dsrs /app/dsrs
 ADD manage.py /app
-WORKDIR /app
 
-ENV VIRTUAL_ENV /app/env 
-ENV PATH /app/env/bin:$PATH
+WORKDIR /app
 EXPOSE 8000
 
 CMD ["gunicorn", "--bind", ":8000", "--workers", "3", "digital.wsgi:application"]
